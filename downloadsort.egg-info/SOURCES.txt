@@ -1,0 +1,10 @@
+LICENSE
+pyproject.toml
+downloadsort/__init__.py
+downloadsort/core.py
+downloadsort.egg-info/PKG-INFO
+downloadsort.egg-info/SOURCES.txt
+downloadsort.egg-info/dependency_links.txt
+downloadsort.egg-info/entry_points.txt
+downloadsort.egg-info/requires.txt
+downloadsort.egg-info/top_level.txt

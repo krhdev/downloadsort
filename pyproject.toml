@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "downloadsort"
+version = "1.2.0"
+description = "Automatically organise your Downloads folder by file type"
+authors = [{ name="Kat" }]
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "send2trash"
+]
+
+[project.scripts]
+downloadsort = "downloadsort.core:run"
