@@ -1,0 +1,87 @@
+{
+    "downloads_folder": "",
+    "delete_after_days": 14,
+    "logging": true,
+    "colour_output": true,
+
+    "file_types": {
+
+        "PDFs": [
+            ".pdf"
+        ],
+
+        "Images": [
+            ".png",
+            ".jpg",
+            ".jpeg",
+            ".gif",
+            ".bmp",
+            ".webp",
+            ".svg",
+            ".ico"
+        ],
+
+        "Installations": [
+            ".exe",
+            ".msi"
+        ],
+
+        "Archives": [
+            ".zip",
+            ".rar",
+            ".7z",
+            ".tar",
+            ".gz"
+        ],
+
+        "Documents": [
+            ".doc",
+            ".docx",
+            ".txt",
+            ".rtf",
+            ".odt"
+        ],
+
+        "Spreadsheets": [
+            ".xls",
+            ".xlsx",
+            ".csv"
+        ],
+
+        "Presentations": [
+            ".ppt",
+            ".pptx"
+        ],
+
+        "Videos": [
+            ".mp4",
+            ".avi",
+            ".mov",
+            ".mkv",
+            ".webm"
+        ],
+
+        "Music": [
+            ".mp3",
+            ".wav",
+            ".aac",
+            ".ogg",
+            ".flac"
+        ],
+
+        "Code": [
+            ".py",
+            ".html",
+            ".css",
+            ".js",
+            ".json",
+            ".xml",
+            ".java",
+            ".cpp",
+            ".c",
+            ".cs",
+            ".php",
+            ".sql"
+        ]
+    }
+}
