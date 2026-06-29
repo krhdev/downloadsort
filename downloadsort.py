@@ -6,7 +6,7 @@ import argparse
 from datetime import datetime
 from send2trash import send2trash
 
-VERSION = "1.1.0"
+VERSION = "1.2.0"
 
 
 # ---------------------------
@@ -14,8 +14,26 @@ VERSION = "1.1.0"
 # ---------------------------
 
 def load_config():
-    with open("config.json", "r", encoding="utf-8") as f:
-        return json.load(f)
+    default_config = {
+        "file_types": {},
+        "ignore_files": [".ini", ".tmp", ".part"],
+        "ignore_names": ["desktop.ini", "thumbs.db"],
+    }
+
+    try:
+        with open("config.json", "r", encoding="utf-8") as f:
+            user_config = json.load(f)
+    except Exception:
+        user_config = {}
+
+    # merge safely
+    for key, value in default_config.items():
+        user_config.setdefault(key, value)
+
+    if "file_types" not in user_config or not user_config["file_types"]:
+        raise ValueError("Config missing 'file_types'")
+
+    return user_config
 
 
 def get_downloads_folder(config, override_path=None):
@@ -37,27 +55,36 @@ def get_downloads_folder(config, override_path=None):
 def parse_args():
     parser = argparse.ArgumentParser(description="DownloadSort CLI")
 
-    parser.add_argument("--path", help="Target folder (default: Downloads)")
-    parser.add_argument("--dry-run", action="store_true", help="Preview actions only")
+    parser.add_argument("--path", help="Target folder")
+    parser.add_argument("--dry-run", action="store_true", help="Preview only")
     parser.add_argument("--no-recycle", action="store_true", help="Disable recycle bin")
-    parser.add_argument("--verbose", action="store_true", help="Show detailed logs")
+    parser.add_argument("--verbose", action="store_true", help="Verbose output")
 
     return parser.parse_args()
 
 
 # ---------------------------
-# LOGGING
+# LOGGING (FILE BASED)
 # ---------------------------
 
-def log(msg, verbose=False):
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+def setup_logger(base_path):
+    log_dir = os.path.join(base_path, "logs")
+    os.makedirs(log_dir, exist_ok=True)
 
-    line = f"[{timestamp}] {msg}"
+    log_file = os.path.join(log_dir, "downloadsort.log")
+
+    return log_file
+
+
+def log(message, log_file, verbose=False):
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    line = f"[{timestamp}] {message}"
 
     if verbose:
         print(line)
-    else:
-        print(msg)
+
+    with open(log_file, "a", encoding="utf-8") as f:
+        f.write(line + "\n")
 
 
 # ---------------------------
@@ -70,8 +97,22 @@ def create_folders(base_path, file_types):
 
 
 # ---------------------------
-# HELPERS
+# FILTERING
 # ---------------------------
+
+def should_ignore(file_name, config):
+    if file_name.startswith("~$"):
+        return True
+
+    if file_name.lower() in config["ignore_names"]:
+        return True
+
+    for ext in config["ignore_files"]:
+        if file_name.lower().endswith(ext):
+            return True
+
+    return False
+
 
 def get_category(file_name, file_types):
     lower = file_name.lower()
@@ -100,14 +141,19 @@ def unique_filename(folder, filename):
 # ENGINE
 # ---------------------------
 
-def organise_files(downloads, file_types, args, summary):
-    for item in os.listdir(downloads):
+def organise_files(downloads, config, args, log_file, summary):
+    files = os.listdir(downloads)
+
+    for item in files:
         source = os.path.join(downloads, item)
 
         if not os.path.isfile(source):
             continue
 
-        category = get_category(item, file_types)
+        if should_ignore(item, config):
+            continue
+
+        category = get_category(item, config["file_types"])
 
         try:
             if category:
@@ -116,7 +162,7 @@ def organise_files(downloads, file_types, args, summary):
                 destination = os.path.join(target_folder, new_name)
 
                 if args.dry_run:
-                    print(f"[DRY RUN] Move: {item} → {category}")
+                    print(f"[DRY RUN] {item} → {category}")
                 else:
                     shutil.move(source, destination)
 
@@ -124,7 +170,7 @@ def organise_files(downloads, file_types, args, summary):
 
             else:
                 if args.dry_run:
-                    print(f"[DRY RUN] Recycle: {item}")
+                    print(f"[DRY RUN] Recycle {item}")
                 else:
                     if args.no_recycle:
                         os.remove(source)
@@ -135,7 +181,7 @@ def organise_files(downloads, file_types, args, summary):
 
         except Exception as e:
             summary["errors"] += 1
-            print(f"[ERROR] {item}: {e}")
+            log(f"ERROR {item}: {e}", log_file, args.verbose)
 
 
 # ---------------------------
@@ -161,10 +207,12 @@ def main():
     start_time = time.time()
     args = parse_args()
 
-    print("\nDownloadSort v1.1.0\n")
+    print("\nDownloadSort v1.2.0\n")
 
     config = load_config()
     downloads = get_downloads_folder(config, args.path)
+
+    log_file = setup_logger(downloads)
 
     create_folders(downloads, config["file_types"])
 
@@ -183,7 +231,7 @@ def main():
         "errors": 0
     }
 
-    organise_files(downloads, config["file_types"], args, summary)
+    organise_files(downloads, config, args, log_file, summary)
 
     print_summary(summary, start_time)
 
