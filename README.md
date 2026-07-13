@@ -23,7 +23,8 @@ pip install -e .
 or Install from GitHub:
 git clone https://github.com/krhdev/downloadsort.git
 cd downloadsort
-pip install -e .
+pip install -e . 
+
 ```
 --- 
 
@@ -74,6 +75,9 @@ Example
 ## 🛠 Requirements
 Python 3.10+
 Windows/Linux/MacOS
+
+## Selling this on etsy
+link tbd soon
 
 ![Python](https://img.shields.io/badge/python-3.10+-blue)
 ![Version](https://img.shields.io/badge/version-v1.2.0-green)
