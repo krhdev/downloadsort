@@ -1,8 +1,10 @@
 import os
+import sys
 import json
 import shutil
 import time
 import argparse
+from pathlib import Path
 from datetime import datetime
 from send2trash import send2trash
 
@@ -13,18 +15,39 @@ VERSION = "1.2.0"
 # CONFIG
 # ---------------------------
 
+def show_notification(title, message):
+    from winotify import Notification
+
+    toast = Notification(
+        app_id="DownloadSort",
+        title=title,
+        msg=message,
+        duration="short"
+    )
+    toast.show()
+
+
 def load_config():
+    if getattr(sys, "frozen", False):
+        # Running as a PyInstaller exe — use the folder the .exe is in
+        base_dir = Path(sys.executable).resolve().parent
+    else:
+        # Running as a normal .py script
+        base_dir = Path(__file__).resolve().parent
+
+    config_path = base_dir / "config.json"
+
+    if not config_path.exists():
+        raise FileNotFoundError(f"Config not found at {config_path}")
+
+    with open(config_path, "r", encoding="utf-8") as f:
+        user_config = json.load(f)
+
     default_config = {
         "file_types": {},
         "ignore_files": [".ini", ".tmp", ".part"],
         "ignore_names": ["desktop.ini", "thumbs.db"],
     }
-
-    try:
-        with open("config.json", "r", encoding="utf-8") as f:
-            user_config = json.load(f)
-    except Exception:
-        user_config = {}
 
     # merge safely
     for key, value in default_config.items():
@@ -234,6 +257,9 @@ def main():
     organise_files(downloads, config, args, log_file, summary)
 
     print_summary(summary, start_time)
+
+    total_sorted = sum(v for k, v in summary.items() if k not in ("recycled", "errors"))
+    show_notification("DownloadSort", f"Sorted {total_sorted} files.")
 
 
 if __name__ == "__main__":

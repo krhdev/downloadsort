@@ -15,14 +15,18 @@ VERSION = "1.2.0"
 
 def load_config():
     import os
+    import sys
     from pathlib import Path
     import json
 
-    # Get directory of installed package file
-    base_dir = Path(__file__).resolve().parent
+    if getattr(sys, "frozen", False):
+        # Running as a PyInstaller exe — use the folder the .exe is in
+        base_dir = Path(sys.executable).resolve().parent
+    else:
+        # Running as a normal .py script
+        base_dir = Path(__file__).resolve().parent
 
-    config_path = base_dir / ".." / "config.json"
-    config_path = config_path.resolve()
+    config_path = base_dir / "config.json"
 
     if not config_path.exists():
         raise FileNotFoundError(f"Config not found at {config_path}")
